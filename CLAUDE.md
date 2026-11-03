@@ -128,7 +128,9 @@ commité sans avoir lu `git status`.
 
 Référence : <https://www.conventionalcommits.org/fr/v1.0.0/>
 
-- Format : `type(portée): description`
+- Format : `type(portée): description`. La portée est facultative, comme le
+  permet la spécification : l'omettre quand aucune portée en usage ne convient,
+  plutôt que d'en forcer une (`chore: compléter le gitignore…`).
 - Types : feat, fix, chore, docs, refactor, style, test, build, ci, perf
 - Description à l'impératif présent, en minuscule, sans point final, en français
 - Une intention par commit
