@@ -2,9 +2,9 @@
 
 # tvd-app-prototype
 
-Application mobile React Native + Expo, développée seul. Android d'abord
-(Pixel 6 Pro et émulateur), iOS ensuite. Fonctionnalités et destination de
-publication non définies.
+Application mobile React Native + Expo, développée seul, destinée à un public
+francophone. Android d'abord (Pixel 6 Pro et émulateur), iOS ensuite.
+Fonctionnalités et destination de publication non définies.
 
 Ce fichier est la seule copie faisant foi des conventions applicables au code.
 Il complète `AGENTS.md`, fourni par Expo, qui ne se modifie pas : **en cas de
@@ -100,7 +100,7 @@ faire sur l'appareil.
 | Noms de fichiers de code                            | anglais, en kebab-case comme le modèle |
 | Commentaires                                        | français                               |
 | Messages de commit                                  | français                               |
-| Textes de l'interface                               | à décider (internationalisation)       |
+| Textes de l'interface                               | français                               |
 
 Pas de numéro de ligne d'une dépendance dans un commentaire : il devient faux à
 la mise à jour suivante.
@@ -143,9 +143,12 @@ Les deux premiers commits du dépôt sont antérieurs à cette convention.
 
 ### Branches
 
-- `main` porte l'état stable.
-- Une branche par lot de travail : `feature/<sujet>`, `chore/<sujet>` ou
-  `docs/<sujet>`. Fusion sur `main` en `git merge --no-ff`.
+- `main` porte l'état stable. **Aucun commit direct sur `main`.**
+- Une branche par lot de travail, créée depuis `main` à jour : `feature/<sujet>`,
+  `fix/<sujet>`, `chore/<sujet>` ou `docs/<sujet>`, en kebab-case. Fusion sur
+  `main` en `git merge --no-ff`, pour qu'un commit de fusion marque chaque lot.
+- Une branche fusionnée se supprime, en local et sur `origin`.
+- Avant de commencer un lot, vérifier la branche courante (`git branch --show-current`).
 - `spike/<sujet>` : banc d'essai jetable, jamais fusionné, supprimé en local et
   sur `origin` après consignation des résultats.
 
