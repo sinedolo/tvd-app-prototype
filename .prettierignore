@@ -1,0 +1,12 @@
+node_modules/
+.expo/
+dist/
+web-build/
+android/
+ios/
+package-lock.json
+expo-env.d.ts
+AGENTS.md
+
+# Dossiers d'icône produits par un outil externe
+*.icon/
