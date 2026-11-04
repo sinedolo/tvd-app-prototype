@@ -61,6 +61,10 @@ Fermer Expo Go avant `adb reverse --remove-all`, sinon la commande se bloque.
   soi-même.
 - EAS CLI : utiliser le `eas` installé globalement, et non
   `npx eas-cli@latest` comme le suggère `AGENTS.md`.
+- Variables d'environnement des builds : elles passent par EAS (`eas env`), pas
+  par des fichiers `.env*`, ignorés par Git et donc absents des builds dans le
+  cloud. Aucune valeur sensible dans une variable préfixée `EXPO_PUBLIC_` : sa
+  valeur est intégrée au code de l'application.
 - Signaler avant d'agir tout service payant (plan EAS, compte développeur Google
   ou Apple).
 - Signaler tout ce qui exige un Mac (build iOS local, simulateur, signature
