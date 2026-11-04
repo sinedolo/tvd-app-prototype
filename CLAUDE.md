@@ -147,6 +147,7 @@ Référence : <https://www.conventionalcommits.org/fr/v1.0.0/>
   - `docs(claude): ajouter les conventions du projet`
   - `chore(eas): lier le projet au compte expo`
   - `chore(deps): réaligner les dépendances sur le sdk 58`
+- Les messages de commit proposés ne contiennent pas de ligne `Co-Authored-By`
 
 Les deux premiers commits du dépôt sont antérieurs à cette convention.
 
