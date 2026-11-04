@@ -86,7 +86,14 @@ Fermer Expo Go avant `adb reverse --remove-all`, sinon la commande se bloque.
 ```bash
 npx expo lint
 npx tsc --noEmit
+npm run format:check
 ```
+
+Sur un clone neuf, `npx tsc --noEmit` signale de fausses erreurs (modules CSS) tant
+que `npx expo start` n'a pas été lancé une fois : le fichier `expo-env.d.ts` est
+généré par le serveur de développement et ignoré par Git.
+
+Le formatage se corrige par `npm run format`, jamais à la main.
 
 Si une commande propose d'installer ou de modifier une configuration, s'arrêter
 et demander. Pour un changement visible à l'écran, décrire le contrôle manuel à
