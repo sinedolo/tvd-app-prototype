@@ -77,6 +77,10 @@ Fermer Expo Go avant `adb reverse --remove-all`, sinon la commande se bloque.
   `npm install <paquet>`.
 - Ne jamais lancer `npm audit fix --force`. Réaligner les versions sur le SDK par
   `npx expo install --fix`.
+- Ne pas passer à ESLint 10 ni forcer des versions par `overrides` : ESLint et
+  ses extensions suivent la version installée par `npx expo install`.
+- À chaque mise à jour du SDK, relancer `npm audit` et `npx expo install --check`,
+  et signaler l'évolution du nombre d'alertes.
 - Ne jamais créer ni éditer `android/` et `ios/` à la main (voir `AGENTS.md`).
 - Demander confirmation avant toute commande destructive (`rm -rf`,
   `git reset --hard`, `git push --force`, suppression d'une branche distante).
