@@ -31,9 +31,9 @@ signaler l'écart plutôt que de choisir.
 Une seule machine de développement, YOGA-NUMA. **Toujours préciser où une
 commande s'exécute** : WSL, Windows, téléphone ou cloud.
 
-| Côté               | Contenu                                                                                 |
-| ------------------ | --------------------------------------------------------------------------------------- |
-| WSL (Ubuntu 24.04) | Code, Git, Node (nvm), Metro, EAS CLI global, Claude Code                               |
+| Côté               | Contenu                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| WSL (Ubuntu 24.04) | Code, Git, Node (nvm), Metro, EAS CLI global, Claude Code                                  |
 | Windows            | Android Studio, émulateur, serveur adb unique (`adb` dans WSL est un enrobage d'`adb.exe`) |
 
 - Réseau WSL en mode miroir avec `hostAddressLoopback` ; règle de pare-feu
@@ -44,9 +44,9 @@ commande s'exécute** : WSL, Windows, téléphone ou cloud.
 
 ### Relier un appareil à Metro
 
-| Appareil                                                    | Chemin par défaut         | Repli                                                                                  |
-| ----------------------------------------------------------- | ------------------------- | -------------------------------------------------------------------------------------- |
-| Émulateur (lancé depuis Android Studio avant la touche `a`) | `npx expo start`          | `adb reverse tcp:8081 tcp:8081` puis `npx expo start --localhost`                       |
+| Appareil                                                    | Chemin par défaut         | Repli                                                                                     |
+| ----------------------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------- |
+| Émulateur (lancé depuis Android Studio avant la touche `a`) | `npx expo start`          | `adb reverse tcp:8081 tcp:8081` puis `npx expo start --localhost`                         |
 | Pixel 6 Pro                                                 | `npx expo start` en Wi-Fi | USB : `adb -s 23021FDEE003DX reverse tcp:8081 tcp:8081` puis `npx expo start --localhost` |
 
 Fermer Expo Go avant `adb reverse --remove-all`, sinon la commande se bloque.
@@ -94,13 +94,13 @@ faire sur l'appareil.
 
 ## Règle de langue
 
-| Catégorie                                           | Langue                                 |
-| --------------------------------------------------- | -------------------------------------- |
-| Identifiants (variables, fonctions, composants)     | anglais                                |
-| Noms de fichiers de code                            | anglais, en kebab-case comme le modèle |
-| Commentaires                                        | français                               |
-| Messages de commit                                  | français                               |
-| Textes de l'interface                               | français                               |
+| Catégorie                                       | Langue                                 |
+| ----------------------------------------------- | -------------------------------------- |
+| Identifiants (variables, fonctions, composants) | anglais                                |
+| Noms de fichiers de code                        | anglais, en kebab-case comme le modèle |
+| Commentaires                                    | français                               |
+| Messages de commit                              | français                               |
+| Textes de l'interface                           | français                               |
 
 Pas de numéro de ligne d'une dépendance dans un commentaire : il devient faux à
 la mise à jour suivante.
@@ -159,12 +159,12 @@ Les deux premiers commits du dépôt sont antérieurs à cette convention.
 Ils vivent hors du dépôt (Obsidian, qui fait foi, et le projet Claude) : les
 demander si le raisonnement derrière une règle est nécessaire.
 
-| Document                          | Contenu                                                     |
-| --------------------------------- | ----------------------------------------------------------- |
-| Feuille de route                  | Étapes, tâches, statuts, points à vérifier                  |
-| Décision 01 (stack)               | React Native + Expo, EAS ; Flutter en repli                 |
-| Décision 02 (outillage)           | Architecture WSL/Windows, adb, réseau                       |
-| Fiche de vérification 1.3 (spike) | Résultats des tests de l'outillage                          |
+| Document                          | Contenu                                                      |
+| --------------------------------- | ------------------------------------------------------------ |
+| Feuille de route                  | Étapes, tâches, statuts, points à vérifier                   |
+| Décision 01 (stack)               | React Native + Expo, EAS ; Flutter en repli                  |
+| Décision 02 (outillage)           | Architecture WSL/Windows, adb, réseau                        |
+| Fiche de vérification 1.3 (spike) | Résultats des tests de l'outillage                           |
 | Procédure côté Windows (1.4)      | WHPX, Android Studio, `.wslconfig`, `Metro8081`, Pixel 6 Pro |
-| Procédure côté WSL (1.5)          | nvm et Node, enrobage `adb`, EAS CLI, chemins vers Metro    |
-| Environnement de travail          | Machine, Git, VS Code, Claude Code                          |
+| Procédure côté WSL (1.5)          | nvm et Node, enrobage `adb`, EAS CLI, chemins vers Metro     |
+| Environnement de travail          | Machine, Git, VS Code, Claude Code                           |
