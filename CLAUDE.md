@@ -23,6 +23,8 @@ signaler l'écart plutôt que de choisir.
 
 - Expo SDK 58 (React Native 0.88, React 19.3), modèle `default`, TypeScript.
 - Expo Router, racine `src/app/` ; React Compiler activé.
+- `expo-dev-client` est installé : le profil `development` d'EAS produit un
+  development build (APK) qui remplace Expo Go pour le travail courant.
 - Node : version fixée par `.nvmrc` (26), gestionnaire de paquets npm.
 - EAS (Expo Application Services) pour les builds dans le cloud.
 
@@ -49,7 +51,13 @@ commande s'exécute** : WSL, Windows, téléphone ou cloud.
 | Émulateur (lancé depuis Android Studio avant la touche `a`) | `npx expo start`          | `adb reverse tcp:8081 tcp:8081` puis `npx expo start --localhost`                         |
 | Pixel 6 Pro                                                 | `npx expo start` en Wi-Fi | USB : `adb -s 23021FDEE003DX reverse tcp:8081 tcp:8081` puis `npx expo start --localhost` |
 
-Fermer Expo Go avant `adb reverse --remove-all`, sinon la commande se bloque.
+`npx expo start` démarre en mode development build ; la touche `s` bascule vers
+Expo Go. Si un appareil ne reçoit plus les modifications (par exemple après une
+mise en veille de l'écran), la touche `r` du terminal de Metro recharge tous les
+appareils reliés.
+
+Fermer l'application (Expo Go ou development build) avant
+`adb reverse --remove-all`, sinon la commande se bloque.
 
 ## Builds
 
@@ -59,6 +67,16 @@ Fermer Expo Go avant `adb reverse --remove-all`, sinon la commande se bloque.
   Android n'est pas installée dans WSL. Ce repli ne s'envisage que si EAS échoue,
   sur décision du développeur : le proposer, ne jamais installer l'outillage de
   soi-même.
+- `eas build` pose des questions (keystore, installation) : il est lancé par le
+  développeur, jamais par Claude Code.
+- Un build part de l'état committé de la branche ; la branche n'est fusionnée
+  qu'une fois le build validé sur les appareils.
+- EAS CLI ne peut pas installer un build sur l'émulateur depuis WSL (pas de
+  programme `emulator`) : l'APK s'installe côté Windows, par le développeur. Ne
+  proposer ni `eas build:run`, ni un enrobage `emulator`, ni aucun outil Android
+  dans WSL.
+- Le keystore Android du prototype est généré et conservé par EAS : aucun
+  fichier de signature dans le dépôt.
 - EAS CLI : utiliser le `eas` installé globalement, et non
   `npx eas-cli@latest` comme le suggère `AGENTS.md`.
 - Variables d'environnement des builds : elles passent par EAS (`eas env`), pas
@@ -175,12 +193,13 @@ Les deux premiers commits du dépôt sont antérieurs à cette convention.
 Ils vivent hors du dépôt (Obsidian, qui fait foi, et le projet Claude) : les
 demander si le raisonnement derrière une règle est nécessaire.
 
-| Document                          | Contenu                                                      |
-| --------------------------------- | ------------------------------------------------------------ |
-| Feuille de route                  | Étapes, tâches, statuts, points à vérifier                   |
-| Décision 01 (stack)               | React Native + Expo, EAS ; Flutter en repli                  |
-| Décision 02 (outillage)           | Architecture WSL/Windows, adb, réseau                        |
-| Fiche de vérification 1.3 (spike) | Résultats des tests de l'outillage                           |
-| Procédure côté Windows (1.4)      | WHPX, Android Studio, `.wslconfig`, `Metro8081`, Pixel 6 Pro |
-| Procédure côté WSL (1.5)          | nvm et Node, enrobage `adb`, EAS CLI, chemins vers Metro     |
-| Environnement de travail          | Machine, Git, VS Code, Claude Code                           |
+| Document                           | Contenu                                                                              |
+| ---------------------------------- | ------------------------------------------------------------------------------------ |
+| Feuille de route                   | Étapes, tâches, statuts, points à vérifier                                           |
+| Décision 01 (stack)                | React Native + Expo, EAS ; Flutter en repli                                          |
+| Décision 02 (outillage)            | Architecture WSL/Windows, adb, réseau                                                |
+| Fiche de vérification 1.3 (spike)  | Résultats des tests de l'outillage                                                   |
+| Procédure côté Windows (1.4)       | WHPX, Android Studio, `.wslconfig`, `Metro8081`, Pixel 6 Pro                         |
+| Procédure côté WSL (1.5)           | nvm et Node, enrobage `adb`, EAS CLI, chemins vers Metro                             |
+| Environnement de travail           | Machine, Git, VS Code, Claude Code                                                   |
+| Décision 03 (comptes et propriété) | Prototype sur comptes personnels ; vraie application créée à neuf chez TV Découverte |
