@@ -23,6 +23,13 @@ signaler l'écart plutôt que de choisir.
 
 - Expo SDK 58 (React Native 0.88, React 19.3), modèle `default`, TypeScript.
 - Expo Router, racine `src/app/` ; React Compiler activé.
+- Écran d'accueil unique dans une pile `Stack`, sans onglets (nettoyage du
+  10.11.2026).
+- Cible web gardée « en sommeil » (décision du 10.11.2026), avec
+  `web.output: "single"` dans `app.json`. Aucun travail, test ni dépendance
+  propres au web sans demande (hors contrôle d'affichage ponctuel, sur
+  demande) ; le code reste couvert par lint et TypeScript. Pas de publication
+  web. Ne pas revenir à `server` ou `static` sans décision.
 - `expo-dev-client` est installé : le profil `development` d'EAS produit un
   development build (APK) qui remplace Expo Go pour le travail courant.
 - Node : version fixée par `.nvmrc` (26), gestionnaire de paquets npm.
@@ -92,8 +99,14 @@ Fermer l'application (Expo Go ou development build) avant
   `eas build --platform ios`, ni connexion à un compte Apple.
 - Avant de proposer un nouveau paquet, vérifier dans sa documentation qu'il
   prend en charge iOS et le SDK 58, et s'il fonctionne dans Expo Go ; signaler
-  toute incompatibilité avant l'installation (Expo Go est le seul moyen gratuit
-  de montrer le projet sur iPhone).
+  toute incompatibilité avant l'installation (Expo Go reste le moyen gratuit de
+  montrer le natif sur iPhone ; la cible web et les vidéos d'écran sont les
+  autres moyens). Signaler aussi la prise en charge du web par le paquet, sans
+  que ce soit bloquant.
+- Sur un iPhone physique, Expo Go n'ouvre le projet que si l'iPhone et Expo CLI
+  utilisent le même compte Expo (`npx expo whoami` côté poste, dans WSL) ; pour
+  le prototype, c'est le compte `sinedolo`. Ne jamais proposer de créer un autre
+  compte.
 
 ## Règles dures
 
@@ -200,14 +213,16 @@ Les deux premiers commits du dépôt sont antérieurs à cette convention.
 Ils vivent hors du dépôt (Obsidian, qui fait foi, et le projet Claude) : les
 demander si le raisonnement derrière une règle est nécessaire.
 
-| Document                           | Contenu                                                                              |
-| ---------------------------------- | ------------------------------------------------------------------------------------ |
-| Feuille de route                   | Étapes, tâches, statuts, points à vérifier                                           |
-| Décision 01 (stack)                | React Native + Expo, EAS ; Flutter en repli                                          |
-| Décision 02 (outillage)            | Architecture WSL/Windows, adb, réseau                                                |
-| Fiche de vérification 1.3 (spike)  | Résultats des tests de l'outillage                                                   |
-| Procédure côté Windows (1.4)       | WHPX, Android Studio, `.wslconfig`, `Metro8081`, Pixel 6 Pro                         |
-| Procédure côté WSL (1.5)           | nvm et Node, enrobage `adb`, EAS CLI, chemins vers Metro                             |
-| Environnement de travail           | Machine, Git, VS Code, Claude Code                                                   |
-| Décision 03 (comptes et propriété) | Prototype sur comptes personnels ; vraie application créée à neuf chez TV Découverte |
-| Décision 04 (iOS)                  | iOS différé ; démonstration par Expo Go ; procédure de bascule                       |
+| Document                             | Contenu                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------ |
+| Feuille de route                     | Étapes, tâches, statuts, points à vérifier                                           |
+| Décision 01 (stack)                  | React Native + Expo, EAS ; Flutter en repli                                          |
+| Décision 02 (outillage)              | Architecture WSL/Windows, adb, réseau                                                |
+| Fiche de vérification 1.3 (spike)    | Résultats des tests de l'outillage                                                   |
+| Procédure côté Windows (1.4)         | WHPX, Android Studio, `.wslconfig`, `Metro8081`, Pixel 6 Pro                         |
+| Procédure côté WSL (1.5)             | nvm et Node, enrobage `adb`, EAS CLI, chemins vers Metro                             |
+| Environnement de travail             | Machine, Git, VS Code, Claude Code                                                   |
+| Décision 03 (comptes et propriété)   | Prototype sur comptes personnels ; vraie application créée à neuf chez TV Découverte |
+| Décision 04 (iOS)                    | iOS différé ; démonstration par Expo Go, vidéos ou cible web ; procédure de bascule  |
+| Aide-mémoire comptes (TV Découverte) | Comptes de la vraie application, ce que l'association doit fournir, ordre conseillé  |
+| Compte rendu de l'étape 1            | Bilan de l'environnement et du prototype ; document daté                             |
