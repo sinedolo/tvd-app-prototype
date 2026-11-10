@@ -3,7 +3,7 @@
 # tvd-app-prototype
 
 Application mobile React Native + Expo, développée seul, destinée à un public
-francophone. Android d'abord (Pixel 6 Pro et émulateur), iOS ensuite.
+francophone. Android d'abord (Pixel 6 Pro et émulateur), iOS différé jusqu'au feu vert (Décision 04).
 Fonctionnalités et destination de publication non définies.
 
 Ce fichier est la seule copie faisant foi des conventions applicables au code.
@@ -87,6 +87,13 @@ Fermer l'application (Expo Go ou development build) avant
   ou Apple).
 - Signaler tout ce qui exige un Mac (build iOS local, simulateur, signature
   Apple), pour que ces séances soient regroupées.
+- Aucune configuration iOS sans décision du développeur : ni
+  `ios.bundleIdentifier`, ni profil iOS dans `eas.json`, ni
+  `eas build --platform ios`, ni connexion à un compte Apple.
+- Avant de proposer un nouveau paquet, vérifier dans sa documentation qu'il
+  prend en charge iOS et le SDK 58, et s'il fonctionne dans Expo Go ; signaler
+  toute incompatibilité avant l'installation (Expo Go est le seul moyen gratuit
+  de montrer le projet sur iPhone).
 
 ## Règles dures
 
@@ -203,3 +210,4 @@ demander si le raisonnement derrière une règle est nécessaire.
 | Procédure côté WSL (1.5)           | nvm et Node, enrobage `adb`, EAS CLI, chemins vers Metro                             |
 | Environnement de travail           | Machine, Git, VS Code, Claude Code                                                   |
 | Décision 03 (comptes et propriété) | Prototype sur comptes personnels ; vraie application créée à neuf chez TV Découverte |
+| Décision 04 (iOS)                  | iOS différé ; démonstration par Expo Go ; procédure de bascule                       |
