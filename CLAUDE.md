@@ -127,6 +127,16 @@ Fermer l'application (Expo Go ou development build) avant
 - Demander confirmation avant toute commande destructive (`rm -rf`,
   `git reset --hard`, `git push --force`, suppression d'une branche distante).
 
+## Dépendances
+
+- Quand une modification supprime le dernier usage d'un paquet (import, plugin
+  d'`app.json`), le retirer dans le même lot, après vérification par
+  `npm explain`. Ne pas retirer un paquet que la pile gardée exige (dépendance
+  directe ou dépendance de pair non optionnelle d'un paquet gardé, par exemple
+  d'`expo-router`), même s'il n'est jamais importé.
+- Le nettoyage des dépendances sans usage dû à la tâche 2.1 est reporté après la
+  tâche 2.3 (décision du 11.11.2026) ; la feuille de route fait référence.
+
 ## Vérifier avant de déclarer une tâche terminée
 
 ```bash
