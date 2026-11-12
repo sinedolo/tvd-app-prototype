@@ -223,16 +223,19 @@ Les deux premiers commits du dépôt sont antérieurs à cette convention.
 Ils vivent hors du dépôt (Obsidian, qui fait foi, et le projet Claude) : les
 demander si le raisonnement derrière une règle est nécessaire.
 
-| Document                             | Contenu                                                                              |
-| ------------------------------------ | ------------------------------------------------------------------------------------ |
-| Feuille de route                     | Étapes, tâches, statuts, points à vérifier                                           |
-| Décision 01 (stack)                  | React Native + Expo, EAS ; Flutter en repli                                          |
-| Décision 02 (outillage)              | Architecture WSL/Windows, adb, réseau                                                |
-| Fiche de vérification 1.3 (spike)    | Résultats des tests de l'outillage                                                   |
-| Procédure côté Windows (1.4)         | WHPX, Android Studio, `.wslconfig`, `Metro8081`, Pixel 6 Pro                         |
-| Procédure côté WSL (1.5)             | nvm et Node, enrobage `adb`, EAS CLI, chemins vers Metro                             |
-| Environnement de travail             | Machine, Git, VS Code, Claude Code                                                   |
-| Décision 03 (comptes et propriété)   | Prototype sur comptes personnels ; vraie application créée à neuf chez TV Découverte |
-| Décision 04 (iOS)                    | iOS différé ; démonstration par Expo Go, vidéos ou cible web ; procédure de bascule  |
-| Aide-mémoire comptes (TV Découverte) | Comptes de la vraie application, ce que l'association doit fournir, ordre conseillé  |
-| Compte rendu de l'étape 1            | Bilan de l'environnement et du prototype ; document daté                             |
+| Document                                  | Contenu                                                                                                              |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Feuille de route                          | Étapes, tâches, statuts, points à vérifier                                                                           |
+| Décision 01 (stack)                       | React Native + Expo, EAS ; Flutter en repli                                                                          |
+| Décision 02 (outillage)                   | Architecture WSL/Windows, adb, réseau                                                                                |
+| Fiche de vérification 1.3 (spike)         | Résultats des tests de l'outillage                                                                                   |
+| Procédure côté Windows (1.4)              | WHPX, Android Studio, `.wslconfig`, `Metro8081`, Pixel 6 Pro                                                         |
+| Procédure côté WSL (1.5)                  | nvm et Node, enrobage `adb`, EAS CLI, chemins vers Metro                                                             |
+| Environnement de travail                  | Machine, Git, VS Code, Claude Code                                                                                   |
+| Décision 03 (comptes et propriété)        | Prototype sur comptes personnels ; vraie application créée à neuf chez TV Découverte                                 |
+| Décision 04 (iOS)                         | iOS différé ; démonstration par Expo Go, vidéos ou cible web ; procédure de bascule                                  |
+| Aide-mémoire comptes (TV Découverte)      | Comptes de la vraie application, ce que l'association doit fournir, ordre conseillé                                  |
+| Compte rendu de l'étape 1                 | Bilan de l'environnement et du prototype ; document daté                                                             |
+| Note de diffusion radio et vidéo          | Webradio et services d'Infomaniak (radio, direct, VOD/AOD), tarifs, questions ; renseignement, pas une décision      |
+| Relevé des sources de contenu (2.2)       | Relevé brut du 11.11.2026 (API du site, direct, YouTube) ; réponses brutes dans `~/projets/tvd-analyse/`, hors dépôt |
+| Compte rendu des sources de contenu (2.2) | Ce qui est utilisable par contenu, voies A et B, conséquences pour le prototype                                      |
