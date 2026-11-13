@@ -1,11 +1,10 @@
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LatestVideo } from '@/components/latest-video';
 import { LivePlayer } from '@/components/live-player';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { YoutubePlayer } from '@/components/youtube-player';
-import { LATEST_VIDEO_ID } from '@/constants/latest-video';
 import { Spacing } from '@/constants/theme';
 
 // `SafeAreaView` ajoute une marge pour éviter la barre d'état et l'encoche ;
@@ -22,7 +21,7 @@ export default function HomeScreen() {
           <ThemedText type="subtitle" style={styles.title}>
             Dernière vidéo
           </ThemedText>
-          <YoutubePlayer videoId={LATEST_VIDEO_ID} />
+          <LatestVideo />
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
