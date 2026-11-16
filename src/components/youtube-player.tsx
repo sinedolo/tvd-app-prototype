@@ -1,7 +1,9 @@
 import Constants from 'expo-constants';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
+import { PlayerError } from '@/components/player-error';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 
@@ -15,6 +17,8 @@ type YoutubePlayerProps = {
 // recouvre le lecteur : ses commandes restent celles de YouTube.
 export function YoutubePlayer({ videoId }: YoutubePlayerProps) {
   const appId = Constants.expoConfig?.android?.package;
+  // Réessayer = remonter la WebView en changeant la `key`.
+  const [attempt, setAttempt] = useState(0);
 
   // Pas de valeur de repli inventée : sans identifiant, on ne charge rien.
   if (!appId) {
@@ -29,6 +33,31 @@ export function YoutubePlayer({ videoId }: YoutubePlayerProps) {
   }
 
   return (
+    <WebViewPlayerInner
+      key={attempt}
+      videoId={videoId}
+      appId={appId}
+      onRetry={() => setAttempt((n) => n + 1)}
+    />
+  );
+}
+
+type InnerProps = YoutubePlayerProps & { appId: string; onRetry: () => void };
+
+function WebViewPlayerInner({ videoId, appId, onRetry }: InnerProps) {
+  const [failed, setFailed] = useState(false);
+
+  // Sans ce remplacement, la WebView affiche sa page d'erreur native (en anglais).
+  if (failed) {
+    return (
+      <PlayerError
+        message="Lecture impossible. Vérifiez la connexion puis réessayez."
+        onRetry={onRetry}
+      />
+    );
+  }
+
+  return (
     <View style={styles.container}>
       <WebView
         source={{
@@ -39,6 +68,23 @@ export function YoutubePlayer({ videoId }: YoutubePlayerProps) {
         allowsInlineMediaPlayback
         allowsFullscreenVideo
         mediaPlaybackRequiresUserAction
+        // Échec de chargement de la page (réseau coupé, DNS…).
+        onError={(event) => {
+          const { code, description } = event.nativeEvent;
+          console.info('Lecteur WebView : échec du chargement', code, description);
+          setFailed(true);
+        }}
+        // Réponse HTTP d'erreur : journalisée seulement. L'événement peut aussi
+        // venir d'une sous-ressource ; on n'affiche pas d'erreur sur cette base.
+        onHttpError={(event) => {
+          const { statusCode, description } = event.nativeEvent;
+          console.info('Lecteur WebView : erreur HTTP', statusCode, description);
+        }}
+        // Processus de rendu tué ou planté par Android.
+        onRenderProcessGone={(event) => {
+          console.info('Lecteur WebView : processus de rendu arrêté', event.nativeEvent.didCrash);
+          setFailed(true);
+        }}
       />
     </View>
   );

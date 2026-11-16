@@ -31,13 +31,22 @@ export function useLatestVideo(): { state: LatestVideoState; reload: () => void 
         if (controller.signal.aborted) return;
 
         const video = pickLatestVideo(parseYoutubeFeed(xml));
+        if (!video) {
+          console.info('Flux YouTube : réponse reçue mais aucune vidéo exploitable');
+        }
         setState(
           video
             ? { status: 'success', video }
             : { status: 'error', message: 'Aucune vidéo disponible pour le moment.' },
         );
-      } catch {
+      } catch (error) {
         if (controller.signal.aborted) return;
+        // `console.info` : visible dans le terminal de Metro, sans bandeau LogBox.
+        // Cause = « HTTP 404 » ou message de l'erreur réseau ; aucune donnée personnelle.
+        console.info(
+          'Flux YouTube : échec du chargement',
+          error instanceof Error ? error.message : String(error),
+        );
         setState({
           status: 'error',
           message: 'Impossible de charger la dernière vidéo. Vérifiez votre connexion.',
