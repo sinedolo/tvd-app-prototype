@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -9,8 +10,17 @@ import { formatDateFr } from '@/utils/format-date-fr';
 
 // Dernière vidéo de la chaîne : chargement, erreur avec « Réessayer », ou lecteur
 // accompagné du titre et de la date.
-export function LatestVideo() {
+type LatestVideoProps = {
+  // Appelé quand le chargement du flux se termine (succès ou erreur).
+  onSettled?: () => void;
+};
+
+export function LatestVideo({ onSettled }: LatestVideoProps) {
   const { state, reload } = useLatestVideo();
+
+  useEffect(() => {
+    if (state.status !== 'loading') onSettled?.();
+  }, [state.status, onSettled]);
 
   if (state.status === 'loading') {
     return (
