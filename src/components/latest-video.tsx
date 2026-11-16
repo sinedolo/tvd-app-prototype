@@ -1,6 +1,7 @@
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { YoutubeBridgePlayer } from '@/components/youtube-bridge-player';
 import { YoutubePlayer } from '@/components/youtube-player';
 import { Spacing } from '@/constants/theme';
 import { useLatestVideo } from '@/hooks/use-latest-video';
@@ -31,13 +32,25 @@ export function LatestVideo() {
   }
 
   const { video } = state;
+  // Même titre et même date sous chacun des deux lecteurs.
+  const info = (
+    <View style={styles.info}>
+      <ThemedText type="smallBold">{video.title}</ThemedText>
+      <ThemedText type="small">{formatDateFr(new Date(video.publishedAt))}</ThemedText>
+    </View>
+  );
   return (
     <View>
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.subtitle}>
+        WebView
+      </ThemedText>
       <YoutubePlayer videoId={video.id} />
-      <View style={styles.info}>
-        <ThemedText type="smallBold">{video.title}</ThemedText>
-        <ThemedText type="small">{formatDateFr(new Date(video.publishedAt))}</ThemedText>
-      </View>
+      {info}
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.subtitle}>
+        React Native YouTube Bridge
+      </ThemedText>
+      <YoutubeBridgePlayer videoId={video.id} />
+      {info}
     </View>
   );
 }
@@ -53,6 +66,10 @@ const styles = StyleSheet.create({
   },
   button: {
     padding: Spacing.two,
+  },
+  subtitle: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
   },
   info: {
     padding: Spacing.three,
