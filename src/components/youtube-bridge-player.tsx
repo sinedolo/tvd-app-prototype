@@ -1,10 +1,21 @@
 import Constants from 'expo-constants';
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { YoutubeView, useYouTubeEvent, useYouTubePlayer } from 'react-native-youtube-bridge';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import {
+  PlayerState,
+  YoutubeView,
+  useYouTubeEvent,
+  useYouTubePlayer,
+} from 'react-native-youtube-bridge';
 
+import { PlayerError } from '@/components/player-error';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+
+// Durée maximale d'une mise en mémoire tampon continue avant d'afficher l'erreur.
+// Une mise en mémoire tampon normale dure quelques secondes ; 15 s laisse de la
+// marge aux réseaux faibles sans laisser un chargement sans fin. À ajuster après essais.
+const BUFFERING_TIMEOUT_MS = 15_000;
 
 type YoutubeBridgePlayerProps = {
   videoId: string;
@@ -50,23 +61,45 @@ function BridgePlayerInner({ videoId, appUrl, onRetry }: InnerProps) {
   // `origin` sans barre finale ; la bibliothèque ajoute la barre à `webViewUrl`
   // (utilisé comme `baseUrl` du HTML en mode inline).
   const player = useYouTubePlayer(videoId, { playsinline: true, controls: true, origin: appUrl });
-  const [errorCode, setErrorCode] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Minuteur de la mise en mémoire tampon (BUFFERING) en cours, s'il y en a un.
+  const bufferingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearBufferingTimer = useCallback(() => {
+    if (bufferingTimer.current !== null) {
+      clearTimeout(bufferingTimer.current);
+      bufferingTimer.current = null;
+    }
+  }, []);
+
+  // Au démontage (dont le « Réessayer » par `key`), aucun minuteur ne doit survivre.
+  useEffect(() => clearBufferingTimer, [clearBufferingTimer]);
 
   useYouTubeEvent(player, 'error', (error) => {
-    setErrorCode(error.code);
+    console.info('Lecteur YouTube Bridge : erreur du lecteur', error.code);
+    clearBufferingTimer();
+    setErrorMessage(
+      `Lecture impossible (code ${error.code}). Vérifiez la connexion puis réessayez.`,
+    );
   });
 
-  if (errorCode !== null) {
-    return (
-      <View style={[styles.container, styles.message]}>
-        <ThemedText style={styles.messageText}>
-          Lecture impossible (code {errorCode}). Vérifiez la connexion puis réessayez.
-        </ThemedText>
-        <Pressable onPress={onRetry} style={styles.button} accessibilityRole="button">
-          <ThemedText style={styles.messageText}>Réessayer</ThemedText>
-        </Pressable>
-      </View>
-    );
+  // Un minuteur n'existe que pendant BUFFERING ; tout autre état l'annule, donc
+  // aucun délai pendant la lecture normale. Si BUFFERING dure trop (coupure en
+  // cours d'usage : le lecteur n'émet alors aucun événement `error`), on passe en erreur.
+  useYouTubeEvent(player, 'stateChange', (state) => {
+    clearBufferingTimer();
+    if (state !== PlayerState.BUFFERING) return;
+    bufferingTimer.current = setTimeout(() => {
+      bufferingTimer.current = null;
+      console.info(
+        `Lecteur YouTube Bridge : chargement bloqué depuis plus de ${BUFFERING_TIMEOUT_MS / 1000} s`,
+      );
+      setErrorMessage('Lecture interrompue. Vérifiez la connexion puis réessayez.');
+    }, BUFFERING_TIMEOUT_MS);
+  });
+
+  if (errorMessage !== null) {
+    return <PlayerError message={errorMessage} onRetry={onRetry} />;
   }
 
   return (
@@ -92,12 +125,5 @@ const styles = StyleSheet.create({
   messageText: {
     color: '#ffffff',
     textAlign: 'center',
-  },
-  button: {
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    borderWidth: 1,
-    borderColor: '#ffffff',
-    borderRadius: 8,
   },
 });
