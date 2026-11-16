@@ -30,8 +30,15 @@ signaler l'écart plutôt que de choisir.
   propres au web sans demande (hors contrôle d'affichage ponctuel, sur
   demande) ; le code reste couvert par lint et TypeScript. Pas de publication
   web. Ne pas revenir à `server` ou `static` sans décision.
+- Lecteurs : `expo-video` pour le direct HLS ; pour YouTube,
+  `react-native-youtube-bridge` (lecteur retenu le 16.11.2026) et une WebView
+  simple (`react-native-webview`), gardée dans le prototype pour comparaison.
 - `expo-dev-client` est installé : le profil `development` d'EAS produit un
-  development build (APK) qui remplace Expo Go pour le travail courant.
+  development build (APK). Un development build ne contient que les modules
+  natifs installés **avant** sa construction : celui du 06.11.2026 ne contient
+  ni `expo-video` ni `react-native-webview`. Jusqu'au prochain build, ouvrir le
+  projet dans l'application **Expo Go** sur l'appareil ; c'est l'application
+  ouverte qui compte, pas le mode affiché par Metro.
 - Node : version fixée par `.nvmrc` (26), gestionnaire de paquets npm.
 - EAS (Expo Application Services) pour les builds dans le cloud.
 
@@ -62,6 +69,18 @@ commande s'exécute** : WSL, Windows, téléphone ou cloud.
 Expo Go. Si un appareil ne reçoit plus les modifications (par exemple après une
 mise en veille de l'écran), la touche `r` du terminal de Metro recharge tous les
 appareils reliés.
+
+En Wi-Fi, l'application s'ouvre depuis l'appareil (QR code ou projet récent dans
+Expo Go). La touche `a` et l'option `--android` passent par adb : sans câble USB
+ni émulateur lancé, elles échouent par une `CommandError`
+(`No Android connected device found`, `spawn …/emulator ENOENT`), ce qui est
+attendu ; avec `--android`, Metro s'arrête. Ne pas les proposer pour un appareil
+relié en Wi-Fi.
+
+Si le Wi-Fi d'un nouveau lieu ne permet pas de joindre Metro alors que la règle
+`Metro8081` est en place, suspecter le réseau (isolation des clients,
+sous-réseaux distincts) avant la configuration : relever l'adresse annoncée par
+Metro et celle du téléphone, puis passer au repli USB.
 
 Fermer l'application (Expo Go ou development build) avant
 `adb reverse --remove-all`, sinon la commande se bloque.
@@ -108,27 +127,52 @@ Fermer l'application (Expo Go ou development build) avant
   le prototype, c'est le compte `sinedolo`. Ne jamais proposer de créer un autre
   compte.
 
+## YouTube
+
+- Une vidéo YouTube ne se lit que par le lecteur intégré de YouTube, sans
+  modifier ni masquer ses fonctions ; `expo-video` ne lit pas YouTube.
+- Le lecteur intégré exige l'identification de l'application, sinon erreur 153 :
+  en-tête `Referer` (WebView simple) ou `origin` et `webViewUrl`
+  (`react-native-youtube-bridge`) valant `https://<identifiant Android>`, sans
+  barre finale. L'identifiant se lit par `expo-constants`
+  (`Constants.expoConfig?.android?.package`), sans valeur de repli inventée.
+- Le flux Atom de la chaîne (`/feeds/videos.xml`) est un service sans garantie :
+  il peut répondre 404 pendant des heures (constaté le 16.11.2026). Un échec du
+  flux n'est pas forcément une erreur du code : le vérifier par `curl` avant de
+  corriger quoi que ce soit.
+
 ## Règles dures
 
 - **Aucune version, option ou compatibilité donnée de mémoire.** Vérifier dans la
   documentation (docs.expo.dev pour la version du SDK du projet, reactnative.dev,
   developer.android.com) et citer la source avec sa date de consultation.
-- **Aucun secret dans Git** : keystore Android, certificats Apple, jetons,
-  fichiers `.env*`. Ils suivent une procédure de sauvegarde hors Git.
+- **Aucun secret exposé** : rien dans Git (keystore Android, certificats Apple,
+  jetons, fichiers `.env*`), et aucune clé dans le code de l'application, où
+  elle serait lisible par quiconque l'installe. Les secrets suivent une procédure
+  de sauvegarde hors Git ; une clé d'API passe par un intermédiaire côté serveur.
 - Ajouter une dépendance par `npx expo install <paquet>`, jamais par
   `npm install <paquet>`.
-- Ne jamais lancer `npm audit fix --force`. Réaligner les versions sur le SDK par
-  `npx expo install --fix`.
+- Ne jamais lancer `npm audit fix --force` : il propose des versions
+  incompatibles (par exemple une rétrogradation d'`expo` vers un SDK ancien).
+  Réaligner les versions sur le SDK par `npx expo install --fix`.
 - Ne pas passer à ESLint 10 ni forcer des versions par `overrides` : ESLint et
   ses extensions suivent la version installée par `npx expo install`.
-- À chaque mise à jour du SDK, relancer `npm audit` et `npx expo install --check`,
-  et signaler l'évolution du nombre d'alertes.
+- À chaque mise à jour du SDK, relancer `npm audit` (et `npm audit --omit=dev`
+  pour les seules dépendances de production) et `npx expo install --check`, et
+  signaler l'évolution du nombre d'alertes.
 - Ne jamais créer ni éditer `android/` et `ios/` à la main (voir `AGENTS.md`).
 - Demander confirmation avant toute commande destructive (`rm -rf`,
   `git reset --hard`, `git push --force`, suppression d'une branche distante).
+- Ne jamais annuler une modification (`git checkout <fichier>`,
+  `git restore`) sans l'accord du développeur : la signaler et attendre.
 
 ## Dépendances
 
+- Après chaque `npx expo install`, montrer `git diff package.json app.json` :
+  l'installation peut ajouter un plugin à `app.json` (constaté pour
+  `expo-video`). Le signaler sans l'annuler ; le développeur décide.
+- Un paquet qu'Expo ne connaît pas est inscrit avec la plage `^` de npm ; le
+  verrou (`package-lock.json`) fixe la version réellement installée.
 - Quand une modification supprime le dernier usage d'un paquet (import, plugin
   d'`app.json`), le retirer dans le même lot, après vérification par
   `npm explain`. Ne pas retirer un paquet que la pile gardée exige (dépendance
@@ -182,6 +226,13 @@ commité sans avoir lu `git status`.
   exclut reste exclu.
 - **Indexer par nom de fichier**, jamais `git add .` ni `git commit -a`.
 - Vérifier `git status` avant chaque commit.
+- **Séparer les commits par nature** : l'installation d'un paquet
+  (`package.json`, `package-lock.json`) dans un commit `chore(deps)`, le code qui
+  s'en sert dans un commit `feat` ou `fix` distinct. Proposer les deux messages
+  et la liste des fichiers de chacun.
+- Les modifications non committées **suivent** un `git switch` : avant de
+  changer de branche, surtout pour comparer deux états (`npm audit`, tests),
+  committer ou mettre de côté (`git stash`), et le signaler au développeur.
 - Réécriture d'historique (`--amend`, `reset --soft`) seulement tant que rien
   n'est poussé ; ensuite, un nouveau commit.
 - Remote unique : `origin` = GitHub (dépôt privé `sinedolo/tvd-app-prototype`).
@@ -215,8 +266,11 @@ Les deux premiers commits du dépôt sont antérieurs à cette convention.
   `main` en `git merge --no-ff`, pour qu'un commit de fusion marque chaque lot.
 - Une branche fusionnée se supprime, en local et sur `origin`.
 - Avant de commencer un lot, vérifier la branche courante (`git branch --show-current`).
-- `spike/<sujet>` : banc d'essai jetable, jamais fusionné, supprimé en local et
-  sur `origin` après consignation des résultats.
+- `spike/<sujet>` : banc d'essai, jamais fusionné tel quel, supprimé en local et
+  sur `origin` après consignation des résultats. Si le développeur retient le
+  résultat, la branche est renommée en `feature/<sujet>`
+  (`git branch -m`) avant d'être complétée et fusionnée (fait pour
+  `feature/lecteur-youtube-bridge`, 16.11.2026).
 
 ## Documents de décision
 
