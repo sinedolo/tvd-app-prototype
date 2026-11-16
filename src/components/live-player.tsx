@@ -1,5 +1,6 @@
-import { useEvent } from 'expo';
+import { useEvent, useEventListener } from 'expo';
 import { useVideoPlayer, VideoView, type VideoSource } from 'expo-video';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -9,6 +10,9 @@ import { useTheme } from '@/hooks/use-theme';
 
 // `contentType: 'hls'` indique au lecteur le format du flux.
 const LIVE_SOURCE: VideoSource = { uri: LIVE_STREAM_URL, contentType: 'hls' };
+
+// Durée maximale d'un chargement continu (`loading`) avant d'afficher l'erreur.
+const LOADING_TIMEOUT_MS = 15_000;
 
 // Lecteur du direct : lecture automatique, commandes natives et plein écran.
 export function LivePlayer() {
@@ -21,13 +25,40 @@ export function LivePlayer() {
   // à chaque changement ; la valeur initiale est le statut courant du lecteur.
   const { status } = useEvent(player, 'statusChange', { status: player.status });
 
+  // `stalled` : le chargement dure trop longtemps. Compteur d'essais : il relance
+  // le minuteur même si le statut reste `loading` d'un essai à l'autre.
+  const [stalled, setStalled] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  // Journalise la cause d'une erreur ; tout changement de statut annule le blocage.
+  useEventListener(player, 'statusChange', ({ status: newStatus, error }) => {
+    setStalled(false);
+    if (newStatus === 'error') {
+      console.info('Direct : erreur du lecteur', error?.message);
+    }
+  });
+
+  // Une coupure en cours d'usage fait repasser ExoPlayer en `loading` (mise en
+  // mémoire tampon) sans erreur : après le délai, on bascule dans l'état d'erreur.
+  useEffect(() => {
+    if (status !== 'loading') return;
+    const timer = setTimeout(() => {
+      console.info(`Direct : chargement bloqué depuis plus de ${LOADING_TIMEOUT_MS / 1000} s`);
+      setStalled(true);
+    }, LOADING_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [status, attempt]);
+
   // Aucun rechargement automatique après une erreur : on remplace la source.
   const retry = async () => {
+    setStalled(false);
+    setAttempt((n) => n + 1);
     await player.replaceAsync(LIVE_SOURCE);
     player.play();
   };
 
-  const isLoading = status === 'idle' || status === 'loading';
+  const hasError = status === 'error' || stalled;
+  const isLoading = !hasError && (status === 'idle' || status === 'loading');
 
   return (
     <View style={styles.container}>
@@ -44,7 +75,7 @@ export function LivePlayer() {
           <ThemedText style={styles.overlayText}>Chargement du direct…</ThemedText>
         </View>
       )}
-      {status === 'error' && (
+      {hasError && (
         <View style={styles.overlay}>
           <ThemedText style={styles.overlayText}>Impossible de lire le direct.</ThemedText>
           <Pressable
