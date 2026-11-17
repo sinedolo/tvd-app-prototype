@@ -3,6 +3,7 @@ import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AudioPlayer } from '@/components/audio-player';
+import { LatestArticle } from '@/components/latest-article';
 import { LatestVideo } from '@/components/latest-video';
 import { LivePlayer } from '@/components/live-player';
 import { ThemedText } from '@/components/themed-text';
@@ -51,6 +52,10 @@ export default function HomeScreen() {
             Dernière vidéo
           </ThemedText>
           <LatestVideo key={`latest-${refreshKey}`} onSettled={onSettled} />
+          <ThemedText type="subtitle" style={styles.title}>
+            Dernier article
+          </ThemedText>
+          <LatestArticle key={`article-${refreshKey}`} />
           <ThemedText type="subtitle" style={styles.title}>
             Flux de test
           </ThemedText>
