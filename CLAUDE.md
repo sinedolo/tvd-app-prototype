@@ -161,6 +161,10 @@ Fermer l'application (Expo Go ou development build) avant
   pour les seules dépendances de production) et `npx expo install --check`, et
   signaler l'évolution du nombre d'alertes.
 - Ne jamais créer ni éditer `android/` et `ios/` à la main (voir `AGENTS.md`).
+- Domaines fictifs (tests, exemples, commentaires) : uniquement les noms
+  réservés par la RFC 2606, `.example`, `.invalid` ou `.test`
+  (`evil.example`, par exemple). Ne jamais affirmer qu'un domaine, un site ou
+  un service existe ou n'existe pas sans l'avoir vérifié.
 - Demander confirmation avant toute commande destructive (`rm -rf`,
   `git reset --hard`, `git push --force`, suppression d'une branche distante).
 - Ne jamais annuler une modification (`git checkout <fichier>`,
@@ -194,6 +198,10 @@ que `npx expo start` n'a pas été lancé une fois : le fichier `expo-env.d.ts` 
 généré par le serveur de développement et ignoré par Git.
 
 Le formatage se corrige par `npm run format`, jamais à la main.
+
+Journaliser par `console.info`, jamais par `console.warn` : dans Expo Go et un
+development build, `console.warn` affiche une alerte LogBox par-dessus l'écran.
+Les messages de `console.info` s'affichent dans le terminal de Metro.
 
 Si une commande propose d'installer ou de modifier une configuration, s'arrêter
 et demander. Pour un changement visible à l'écran, décrire le contrôle manuel à
