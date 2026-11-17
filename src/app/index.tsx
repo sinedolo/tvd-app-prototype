@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AudioPlayer } from '@/components/audio-player';
 import { LatestVideo } from '@/components/latest-video';
 import { LivePlayer } from '@/components/live-player';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { SITE_MP3_URL, TEST_RADIO_URL } from '@/constants/audio-sources';
 import { Spacing } from '@/constants/theme';
 
 // Durée maximale de l'indicateur de rafraîchissement : filet de sécurité si la fin
@@ -49,6 +51,23 @@ export default function HomeScreen() {
             Dernière vidéo
           </ThemedText>
           <LatestVideo key={`latest-${refreshKey}`} onSettled={onSettled} />
+          <ThemedText type="subtitle" style={styles.title}>
+            Flux de test
+          </ThemedText>
+          <AudioPlayer
+            key={`radio-${refreshKey}`}
+            source={TEST_RADIO_URL}
+            title="Radio de test (Radio Mast)"
+            live
+          />
+          <ThemedText type="subtitle" style={styles.title}>
+            MP3 du site
+          </ThemedText>
+          <AudioPlayer
+            key={`mp3-${refreshKey}`}
+            source={SITE_MP3_URL}
+            title="Fallone après minuit"
+          />
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
