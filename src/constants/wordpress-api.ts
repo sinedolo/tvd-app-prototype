@@ -16,5 +16,16 @@ export function articlePdfUrl(articleId: number): string {
   return `${WORDPRESS_API_URL}/media?parent=${articleId}&mime_type=application/pdf&_fields=id,source_url`;
 }
 
+// Dernier épisode d'émission (podcast). La réponse ne contient ni image ni adresse
+// de MP3 : le fichier se cherche ensuite dans la médiathèque.
+export const LATEST_PODCAST_URL =
+  `${WORDPRESS_API_URL}/emissions?per_page=1&orderby=date&order=desc` +
+  '&_fields=id,date_gmt,link,title';
+
+// MP3 rattaché à un épisode (média dont le parent est l'émission).
+export function podcastAudioUrl(episodeId: number): string {
+  return `${WORDPRESS_API_URL}/media?parent=${episodeId}&mime_type=audio/mpeg&_fields=id,source_url`;
+}
+
 // Délai maximal d'une requête vers l'API.
 export const WORDPRESS_TIMEOUT_MS = 15_000;
