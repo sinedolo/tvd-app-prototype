@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AudioPlayer } from '@/components/audio-player';
 import { LatestArticle } from '@/components/latest-article';
 import { LatestPodcast } from '@/components/latest-podcast';
+import { LatestPodcastVideo } from '@/components/latest-podcast-video';
 import { LatestVideo } from '@/components/latest-video';
 import { LivePlayer } from '@/components/live-player';
 import { ThemedText } from '@/components/themed-text';
@@ -70,6 +71,10 @@ export default function HomeScreen() {
             Dernier podcast
           </ThemedText>
           <LatestPodcast key={`podcast-${refreshKey}`} />
+          <ThemedText type="subtitle" style={styles.title}>
+            Dernier podcast en vidéo
+          </ThemedText>
+          <LatestPodcastVideo key={`podcast-video-${refreshKey}`} />
         </ScrollView>
       </SafeAreaView>
     </ThemedView>

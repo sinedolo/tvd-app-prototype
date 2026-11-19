@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/themed-text';
 import { YoutubeBridgePlayer } from '@/components/youtube-bridge-player';
 import { YoutubePlayer } from '@/components/youtube-player';
 import { Spacing } from '@/constants/theme';
+import { YOUTUBE_CHANNEL_ID } from '@/constants/youtube-feed';
 import { useLatestVideo } from '@/hooks/use-latest-video';
 import { formatDateFr } from '@/utils/format-date-fr';
 
@@ -16,7 +17,7 @@ type LatestVideoProps = {
 };
 
 export function LatestVideo({ onSettled }: LatestVideoProps) {
-  const { state, reload } = useLatestVideo();
+  const { state, reload } = useLatestVideo(YOUTUBE_CHANNEL_ID);
 
   useEffect(() => {
     if (state.status !== 'loading') onSettled?.();
