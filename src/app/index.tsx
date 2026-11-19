@@ -4,11 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AudioPlayer } from '@/components/audio-player';
 import { LatestArticle } from '@/components/latest-article';
+import { LatestPodcast } from '@/components/latest-podcast';
 import { LatestVideo } from '@/components/latest-video';
 import { LivePlayer } from '@/components/live-player';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { SITE_MP3_URL, TEST_RADIO_URL } from '@/constants/audio-sources';
+import { TEST_RADIO_URL } from '@/constants/audio-sources';
 import { Spacing } from '@/constants/theme';
 
 // Durée maximale de l'indicateur de rafraîchissement : filet de sécurité si la fin
@@ -66,13 +67,9 @@ export default function HomeScreen() {
             live
           />
           <ThemedText type="subtitle" style={styles.title}>
-            MP3 du site
+            Dernier podcast
           </ThemedText>
-          <AudioPlayer
-            key={`mp3-${refreshKey}`}
-            source={SITE_MP3_URL}
-            title="Fallone après minuit"
-          />
+          <LatestPodcast key={`podcast-${refreshKey}`} />
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
