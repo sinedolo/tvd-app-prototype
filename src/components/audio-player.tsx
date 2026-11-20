@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { usePlaybackCoordinator } from '@/components/playback-coordinator';
 import { PlayerError } from '@/components/player-error';
 import { ThemedText } from '@/components/themed-text';
+import { NOTIFICATION_ARTIST } from '@/constants/notification';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -53,7 +54,8 @@ export function AudioPlayer({ source, title, live = false }: AudioPlayerProps) {
 
   // Démarrage détecté sur l'état du lecteur (bouton de l'application ou commandes
   // de l'écran verrouillé) : les autres lecteurs se mettent en pause et rendent la
-  // notification ; celui-ci la prend, avec le titre du bloc et sans image.
+  // notification ; celui-ci la prend, avec le titre du bloc, le nom de la chaîne
+  // et sans image.
   const notifyStarted = usePlaybackCoordinator({
     pause: () => player.pause(),
     deactivate: releaseLockScreen,
@@ -63,7 +65,11 @@ export function AudioPlayer({ source, title, live = false }: AudioPlayerProps) {
     notifyStarted();
     if (lockScreenActive.current) return;
     lockScreenActive.current = true;
-    player.setActiveForLockScreen(true, { title }, { isLiveStream: live });
+    player.setActiveForLockScreen(
+      true,
+      { title, artist: NOTIFICATION_ARTIST },
+      { isLiveStream: live },
+    );
   }, [status.playing, notifyStarted, player, title, live]);
 
   // Au démontage (tirer vers le bas, « Réessayer » du parent), la notification
