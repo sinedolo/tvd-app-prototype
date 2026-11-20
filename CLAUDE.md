@@ -31,14 +31,14 @@ signaler l'écart plutôt que de choisir.
   demande) ; le code reste couvert par lint et TypeScript. Pas de publication
   web. Ne pas revenir à `server` ou `static` sans décision.
 - Lecteurs : `expo-video` pour le direct HLS ; pour YouTube,
-  `react-native-youtube-bridge` (lecteur retenu le 16.11.2026) et une WebView
-  simple (`react-native-webview`), gardée dans le prototype pour comparaison.
+  `react-native-youtube-bridge` (lecteur retenu le 16.11.2026), seul lecteur
+  YouTube : la WebView simple a été retirée le 20.11.2026.
+  `react-native-webview` reste installé (dépendance directe du projet).
 - `expo-dev-client` est installé : le profil `development` d'EAS produit un
   development build (APK). Un development build ne contient que les modules
-  natifs installés **avant** sa construction : celui du 06.11.2026 ne contient
-  ni `expo-video` ni `react-native-webview`. Jusqu'au prochain build, ouvrir le
-  projet dans l'application **Expo Go** sur l'appareil ; c'est l'application
-  ouverte qui compte, pas le mode affiché par Metro.
+  natifs installés **avant** sa construction : celui du 20.11.2026, installé sur
+  le Pixel, contient `expo-video`, `expo-audio` et `react-native-webview`. Un
+  paquet natif ajouté depuis exige un nouveau build.
 - Node : version fixée par `.nvmrc` (26), gestionnaire de paquets npm.
 - EAS (Expo Application Services) pour les builds dans le cloud.
 
@@ -95,8 +95,12 @@ Fermer l'application (Expo Go ou development build) avant
   soi-même.
 - `eas build` pose des questions (keystore, installation) : il est lancé par le
   développeur, jamais par Claude Code.
-- Un build part de l'état committé de la branche ; la branche n'est fusionnée
-  qu'une fois le build validé sur les appareils.
+- L'archive envoyée à EAS inclut les fichiers non committés, sauf ceux que
+  `.gitignore` exclut (documentation EAS « Project upload », consultée le
+  20.11.2026 ; vrai tant que `cli.requireCommit` n'est pas activé dans
+  `eas.json`). Donc : committer et vérifier un `git status` propre avant
+  `eas build`, pour que le build corresponde à un commit connu. La branche n'est
+  fusionnée qu'une fois le build validé sur les appareils.
 - EAS CLI ne peut pas installer un build sur l'émulateur depuis WSL (pas de
   programme `emulator`) : l'APK s'installe côté Windows, par le développeur. Ne
   proposer ni `eas build:run`, ni un enrobage `emulator`, ni aucun outil Android
@@ -105,6 +109,15 @@ Fermer l'application (Expo Go ou development build) avant
   fichier de signature dans le dépôt.
 - EAS CLI : utiliser le `eas` installé globalement, et non
   `npx eas-cli@latest` comme le suggère `AGENTS.md`.
+- **Development build au quotidien.** Metro se lance par
+  `npx expo start --dev-client` ; on ouvre l'application installée sur le Pixel
+  (pas Expo Go). Une modification JavaScript arrive par Metro, sans nouveau
+  build. Une modification de plugin, de paquet natif ou de la configuration
+  native d'`app.json` exige un nouveau build. Quota gratuit de 15 builds Android
+  par mois (vérifié le 10.11.2026, feuille de route) : compter chaque build
+  lancé, et signaler tout build comme consommant le quota. Avant un build,
+  `npx expo config --type introspect --json` montre permissions et services sans
+  rien écrire.
 - Variables d'environnement des builds : elles passent par EAS (`eas env`), pas
   par des fichiers `.env*`, ignorés par Git et donc absents des builds dans le
   cloud. Aucune valeur sensible dans une variable préfixée `EXPO_PUBLIC_` : sa
@@ -140,6 +153,37 @@ Fermer l'application (Expo Go ou development build) avant
   il peut répondre 404 pendant des heures (constaté le 16.11.2026). Un échec du
   flux n'est pas forcément une erreur du code : le vérifier par `curl` avant de
   corriger quoi que ce soit.
+
+## Lecture audio et vidéo
+
+- **Un seul son à la fois.** Tout lecteur (direct, webradio, podcast, vidéos
+  YouTube) s'inscrit au coordinateur, fourni à la racine (`src/app/_layout.tsx`),
+  par `usePlaybackCoordinator`. Il fournit `pause` (et `deactivate` s'il a une
+  notification) et appelle `notifyStarted` quand son état passe à « en
+  lecture » : événement d'état du lecteur, jamais seulement le bouton, pour que
+  les commandes de la notification passent aussi. Aucune reprise automatique
+  d'un lecteur mis en pause. Tout nouveau lecteur suit cette règle.
+- Pas de lecture automatique des contenus. Le direct attend l'appui sur
+  Lecture (le démarrage à l'entrée d'un onglet de direct sera décidé avec la
+  navigation).
+- Arrière-plan Android : plugins `expo-video` (`supportsBackgroundPlayback`) et
+  `expo-audio` (`enableBackgroundPlayback`, `recordAudioAndroid: false`,
+  `microphonePermission: false`) dans `app.json` ; mode audio réglé une fois à
+  la racine (`setAudioModeAsync`) ; un seul lecteur actif sur l'écran
+  verrouillé ; titre du bloc et `NOTIFICATION_ARTIST`
+  (`src/constants/notification.ts`) dans les notifications.
+- Les vidéos YouTube ne jouent pas en arrière-plan (règles de YouTube) : ne pas
+  contourner.
+- Reprise d'un direct après une pause : relancer la source pour revenir au
+  direct réel, son coupé pendant la relance, sans seconde notification de
+  démarrage. `expo-video` et `expo-audio` n'offrent aucun retour au direct au
+  SDK 58 (vérifié le 20.11.2026) : à remplacer si une version en propose un.
+- React Compiler : modifier un objet renvoyé par `useVideoPlayer` ou
+  `useAudioPlayer` (`muted`, `staysActiveInBackground`, etc.) se fait dans une
+  fonction hors du composant (le lint l'impose).
+- Limites connues, à ne pas « corriger » sans décision : boutons de la
+  notification du direct TV (début, fin, ±10 s) imposés par `expo-video` ;
+  notification d'un lecteur audio démonté qui reste 30 s à 1 min.
 
 ## Règles dures
 
