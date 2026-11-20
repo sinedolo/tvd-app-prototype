@@ -1,3 +1,4 @@
+import { setAudioModeAsync } from 'expo-audio';
 import {
   createContext,
   useCallback,
@@ -15,6 +16,9 @@ import {
 export type PlayerHandlers = {
   // Met le lecteur en pause (peut être asynchrone, comme celui de YouTube).
   pause: () => void | Promise<unknown>;
+  // Libère la notification et l'écran verrouillé, appelé après `pause` quand un
+  // autre lecteur démarre. Facultatif : les lecteurs YouTube n'en ont pas.
+  deactivate?: () => void;
 };
 
 type Coordinator = {
@@ -49,7 +53,23 @@ export function PlaybackCoordinatorProvider({ children }: { children: ReactNode 
       } catch (error) {
         console.info('Coordination : échec de la pause', otherId, error);
       }
+      try {
+        // Un seul lecteur sur l'écran verrouillé : celui qui vient de démarrer.
+        handlers.deactivate?.();
+      } catch (error) {
+        console.info('Coordination : échec de la libération de la notification', otherId, error);
+      }
     }
+  }, []);
+
+  // Mode audio de l'application, réglé une fois au démarrage : lecture en
+  // arrière-plan, et `doNotMix`, exigé pour les commandes de l'écran verrouillé.
+  useEffect(() => {
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+      interruptionMode: 'doNotMix',
+    }).catch((error) => console.info('Coordination : échec du réglage du mode audio', error));
   }, []);
 
   const value = useMemo(() => ({ register, notifyStarted }), [register, notifyStarted]);
@@ -78,7 +98,14 @@ export function usePlaybackCoordinator(handlers: PlayerHandlers): () => void {
     latest.current = handlers;
   });
 
-  useEffect(() => register(id, { pause: () => latest.current.pause() }), [register, id]);
+  useEffect(
+    () =>
+      register(id, {
+        pause: () => latest.current.pause(),
+        deactivate: () => latest.current.deactivate?.(),
+      }),
+    [register, id],
+  );
 
   return useCallback(() => notifyStarted(id), [notifyStarted, id]);
 }

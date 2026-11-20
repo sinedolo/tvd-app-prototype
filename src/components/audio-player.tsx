@@ -1,5 +1,5 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { usePlaybackCoordinator } from '@/components/playback-coordinator';
@@ -32,18 +32,53 @@ function formatTime(totalSeconds: number): string {
   return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
 }
 
-// Lecteur audio au premier plan. `useAudioPlayer` libère le lecteur natif au
-// démontage ; « Réessayer » du parent passe par le remontage par clé.
+// Lecteur audio, qui continue en arrière-plan (mode audio réglé à la racine par le
+// coordinateur). `useAudioPlayer` libère le lecteur natif au démontage ;
+// « Réessayer » du parent passe par le remontage par clé.
 export function AudioPlayer({ source, title, live = false }: AudioPlayerProps) {
   const theme = useTheme();
   const player = useAudioPlayer(source);
   const status = useAudioPlayerStatus(player);
 
-  // Démarrage détecté sur l'état du lecteur : les autres lecteurs se mettent en pause.
-  const notifyStarted = usePlaybackCoordinator({ pause: () => player.pause() });
+  // Lecteur actuellement affiché sur l'écran verrouillé (et dans la notification).
+  // Sur Android, cette activation est nécessaire pour que la lecture en arrière-plan
+  // dure plus de quelques minutes.
+  const lockScreenActive = useRef(false);
+
+  const releaseLockScreen = useCallback(() => {
+    if (!lockScreenActive.current) return;
+    lockScreenActive.current = false;
+    player.clearLockScreenControls();
+  }, [player]);
+
+  // Démarrage détecté sur l'état du lecteur (bouton de l'application ou commandes
+  // de l'écran verrouillé) : les autres lecteurs se mettent en pause et rendent la
+  // notification ; celui-ci la prend, avec le titre du bloc et sans image.
+  const notifyStarted = usePlaybackCoordinator({
+    pause: () => player.pause(),
+    deactivate: releaseLockScreen,
+  });
   useEffect(() => {
-    if (status.playing) notifyStarted();
-  }, [status.playing, notifyStarted]);
+    if (!status.playing) return;
+    notifyStarted();
+    if (lockScreenActive.current) return;
+    lockScreenActive.current = true;
+    player.setActiveForLockScreen(true, { title }, { isLiveStream: live });
+  }, [status.playing, notifyStarted, player, title, live]);
+
+  // Au démontage (tirer vers le bas, « Réessayer » du parent), la notification
+  // d'un lecteur actif est libérée explicitement. `useAudioPlayer` ne libère le
+  // lecteur natif qu'après ces nettoyages : l'appel reste possible ici.
+  useEffect(
+    () => () => {
+      try {
+        releaseLockScreen();
+      } catch (error) {
+        console.info(`Audio « ${title} » : échec de la libération de la notification`, error);
+      }
+    },
+    [releaseLockScreen, title],
+  );
 
   // `stalled` : attente trop longue. `attempt` relance le minuteur même si l'état
   // du lecteur ne change pas d'un essai à l'autre. `seeking` : déplacement en cours.

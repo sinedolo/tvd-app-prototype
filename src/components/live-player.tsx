@@ -1,5 +1,5 @@
 import { useEvent, useEventListener } from 'expo';
-import { useVideoPlayer, VideoView, type VideoSource } from 'expo-video';
+import { useVideoPlayer, VideoView, type VideoPlayer, type VideoSource } from 'expo-video';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
@@ -9,8 +9,20 @@ import { LIVE_STREAM_URL } from '@/constants/live-stream';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-// `contentType: 'hls'` indique au lecteur le format du flux.
-const LIVE_SOURCE: VideoSource = { uri: LIVE_STREAM_URL, contentType: 'hls' };
+// `contentType: 'hls'` indique au lecteur le format du flux. `metadata` : texte de
+// la notification, le titre du bloc de l'accueil (aucune image distante).
+const LIVE_SOURCE: VideoSource = {
+  uri: LIVE_STREAM_URL,
+  contentType: 'hls',
+  metadata: { title: 'TV Découverte en direct' },
+};
+
+// Affiche ou retire la notification du direct (et ses commandes d'écran verrouillé).
+// Hors du composant : le React Compiler interdit de modifier dans le composant
+// l'objet renvoyé par un hook.
+function setNowPlayingNotification(player: VideoPlayer, show: boolean) {
+  player.showNowPlayingNotification = show;
+}
 
 // Durée maximale d'un chargement continu (`loading`) avant d'afficher l'erreur.
 const LOADING_TIMEOUT_MS = 15_000;
@@ -19,13 +31,23 @@ const LOADING_TIMEOUT_MS = 15_000;
 // automatique : le son ne démarre qu'à l'appui sur Lecture.
 export function LivePlayer() {
   const theme = useTheme();
-  const player = useVideoPlayer(LIVE_SOURCE);
+  // Le son continue en arrière-plan (écran éteint, autre application) ; la vidéo
+  // n'est plus affichée. Exige `supportsBackgroundPlayback` dans `app.json`.
+  const player = useVideoPlayer(LIVE_SOURCE, (p) => {
+    p.staysActiveInBackground = true;
+  });
 
   // Le démarrage est détecté sur l'état du lecteur (et non sur un bouton), donc
-  // aussi quand il vient des commandes natives. Les autres lecteurs se mettent en pause.
-  const notifyStarted = usePlaybackCoordinator({ pause: () => player.pause() });
+  // aussi quand il vient des commandes natives. Les autres lecteurs se mettent en
+  // pause ; le direct prend la notification, qu'il rend quand un autre démarre.
+  const notifyStarted = usePlaybackCoordinator({
+    pause: () => player.pause(),
+    deactivate: () => setNowPlayingNotification(player, false),
+  });
   useEventListener(player, 'playingChange', ({ isPlaying }) => {
-    if (isPlaying) notifyStarted();
+    if (!isPlaying) return;
+    notifyStarted();
+    setNowPlayingNotification(player, true);
   });
 
   // `useEvent` renvoie la dernière valeur de l'événement et relance le rendu
