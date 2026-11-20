@@ -2,6 +2,7 @@ import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { usePlaybackCoordinator } from '@/components/playback-coordinator';
 import { PlayerError } from '@/components/player-error';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -37,6 +38,12 @@ export function AudioPlayer({ source, title, live = false }: AudioPlayerProps) {
   const theme = useTheme();
   const player = useAudioPlayer(source);
   const status = useAudioPlayerStatus(player);
+
+  // Démarrage détecté sur l'état du lecteur : les autres lecteurs se mettent en pause.
+  const notifyStarted = usePlaybackCoordinator({ pause: () => player.pause() });
+  useEffect(() => {
+    if (status.playing) notifyStarted();
+  }, [status.playing, notifyStarted]);
 
   // `stalled` : attente trop longue. `attempt` relance le minuteur même si l'état
   // du lecteur ne change pas d'un essai à l'autre. `seeking` : déplacement en cours.

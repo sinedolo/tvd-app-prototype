@@ -3,6 +3,7 @@ import { useVideoPlayer, VideoView, type VideoSource } from 'expo-video';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
+import { usePlaybackCoordinator } from '@/components/playback-coordinator';
 import { ThemedText } from '@/components/themed-text';
 import { LIVE_STREAM_URL } from '@/constants/live-stream';
 import { Spacing } from '@/constants/theme';
@@ -14,11 +15,17 @@ const LIVE_SOURCE: VideoSource = { uri: LIVE_STREAM_URL, contentType: 'hls' };
 // Durée maximale d'un chargement continu (`loading`) avant d'afficher l'erreur.
 const LOADING_TIMEOUT_MS = 15_000;
 
-// Lecteur du direct : lecture automatique, commandes natives et plein écran.
+// Lecteur du direct : commandes natives et plein écran. Pas de lecture
+// automatique : le son ne démarre qu'à l'appui sur Lecture.
 export function LivePlayer() {
   const theme = useTheme();
-  const player = useVideoPlayer(LIVE_SOURCE, (p) => {
-    p.play();
+  const player = useVideoPlayer(LIVE_SOURCE);
+
+  // Le démarrage est détecté sur l'état du lecteur (et non sur un bouton), donc
+  // aussi quand il vient des commandes natives. Les autres lecteurs se mettent en pause.
+  const notifyStarted = usePlaybackCoordinator({ pause: () => player.pause() });
+  useEventListener(player, 'playingChange', ({ isPlaying }) => {
+    if (isPlaying) notifyStarted();
   });
 
   // `useEvent` renvoie la dernière valeur de l'événement et relance le rendu

@@ -8,6 +8,7 @@ import {
   useYouTubePlayer,
 } from 'react-native-youtube-bridge';
 
+import { usePlaybackCoordinator } from '@/components/playback-coordinator';
 import { PlayerError } from '@/components/player-error';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -61,6 +62,7 @@ function BridgePlayerInner({ videoId, appUrl, onRetry }: InnerProps) {
   // `origin` sans barre finale ; la bibliothèque ajoute la barre à `webViewUrl`
   // (utilisé comme `baseUrl` du HTML en mode inline).
   const player = useYouTubePlayer(videoId, { playsinline: true, controls: true, origin: appUrl });
+  const notifyStarted = usePlaybackCoordinator({ pause: () => player.pause() });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // Minuteur de la mise en mémoire tampon (BUFFERING) en cours, s'il y en a un.
   const bufferingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -88,6 +90,8 @@ function BridgePlayerInner({ videoId, appUrl, onRetry }: InnerProps) {
   // cours d'usage : le lecteur n'émet alors aucun événement `error`), on passe en erreur.
   useYouTubeEvent(player, 'stateChange', (state) => {
     clearBufferingTimer();
+    // Démarrage : les autres lecteurs se mettent en pause.
+    if (state === PlayerState.PLAYING) notifyStarted();
     if (state !== PlayerState.BUFFERING) return;
     bufferingTimer.current = setTimeout(() => {
       bufferingTimer.current = null;
