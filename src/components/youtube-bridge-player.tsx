@@ -24,7 +24,7 @@ type YoutubeBridgePlayerProps = {
 // Lecteur basé sur react-native-youtube-bridge, mode HTML inline. YouTube exige
 // que le lecteur intégré identifie l'application (erreur 153 sinon) : on règle
 // l'origine et l'URL de base du HTML sur `https://<identifiant Android>`, lu
-// dans `app.json` par `expo-constants`, comme dans `youtube-player.tsx`.
+// dans `app.json` par `expo-constants`.
 export function YoutubeBridgePlayer({ videoId }: YoutubeBridgePlayerProps) {
   const appId = Constants.expoConfig?.android?.package;
   // Réessayer = remonter tout le lecteur en changeant la `key` : cela recrée
