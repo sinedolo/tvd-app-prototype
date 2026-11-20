@@ -1,24 +1,102 @@
 import { useEvent, useEventListener } from 'expo';
-import { useVideoPlayer, VideoView, type VideoSource } from 'expo-video';
-import { useEffect, useState } from 'react';
+import { useVideoPlayer, VideoView, type VideoPlayer, type VideoSource } from 'expo-video';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
+import { usePlaybackCoordinator } from '@/components/playback-coordinator';
 import { ThemedText } from '@/components/themed-text';
 import { LIVE_STREAM_URL } from '@/constants/live-stream';
+import { NOTIFICATION_ARTIST } from '@/constants/notification';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-// `contentType: 'hls'` indique au lecteur le format du flux.
-const LIVE_SOURCE: VideoSource = { uri: LIVE_STREAM_URL, contentType: 'hls' };
+// `contentType: 'hls'` indique au lecteur le format du flux. `metadata` : texte de
+// la notification, le titre du bloc de l'accueil et le nom de la chaîne (aucune
+// image distante).
+const LIVE_SOURCE: VideoSource = {
+  uri: LIVE_STREAM_URL,
+  contentType: 'hls',
+  metadata: { title: 'TV Découverte en direct', artist: NOTIFICATION_ARTIST },
+};
+
+// Fonctions hors du composant : le React Compiler interdit de modifier dans le
+// composant l'objet renvoyé par un hook.
+
+// Affiche ou retire la notification du direct (et ses commandes d'écran verrouillé).
+function setNowPlayingNotification(player: VideoPlayer, show: boolean) {
+  player.showNowPlayingNotification = show;
+}
+
+// Coupe ou rétablit le son du direct.
+function setMuted(player: VideoPlayer, muted: boolean) {
+  player.muted = muted;
+}
 
 // Durée maximale d'un chargement continu (`loading`) avant d'afficher l'erreur.
 const LOADING_TIMEOUT_MS = 15_000;
 
-// Lecteur du direct : lecture automatique, commandes natives et plein écran.
+// Lecteur du direct : commandes natives et plein écran. Pas de lecture
+// automatique : le son ne démarre qu'à l'appui sur Lecture.
 export function LivePlayer() {
   const theme = useTheme();
+  // Le son continue en arrière-plan (écran éteint, autre application) ; la vidéo
+  // n'est plus affichée. Exige `supportsBackgroundPlayback` dans `app.json`.
   const player = useVideoPlayer(LIVE_SOURCE, (p) => {
-    p.play();
+    p.staysActiveInBackground = true;
+  });
+
+  // Le démarrage est détecté sur l'état du lecteur (et non sur un bouton), donc
+  // aussi quand il vient des commandes natives. Les autres lecteurs se mettent en
+  // pause ; le direct prend la notification, qu'il rend quand un autre démarre.
+  const notifyStarted = usePlaybackCoordinator({
+    pause: () => player.pause(),
+    deactivate: () => setNowPlayingNotification(player, false),
+  });
+
+  // Retour au direct après une pause. expo-video (SDK 58) n'offre aucune méthode
+  // pour rejoindre le direct : on relance la source. Mécanisme à remplacer si une
+  // version future d'expo-video propose un retour au direct.
+  // `pausedSinceStart` : une pause a eu lieu depuis le dernier démarrage.
+  // `reloading` : relance en cours ; ses événements ne comptent ni comme une pause
+  // ni comme un démarrage (pas de seconde mise en pause des autres lecteurs).
+  const pausedSinceStart = useRef(false);
+  const reloading = useRef(false);
+
+  // Le son est coupé plutôt que mis en pause pendant la relance : la notification
+  // d'expo-video n'existe que tant que la lecture est demandée ; une pause la
+  // retirerait, notamment écran verrouillé.
+  const reloadLive = async () => {
+    reloading.current = true;
+    setMuted(player, true);
+    try {
+      await player.replaceAsync(LIVE_SOURCE);
+      player.play();
+    } catch (error) {
+      console.info('Direct : échec de la relance au direct', error);
+      reloading.current = false;
+    } finally {
+      setMuted(player, false);
+    }
+  };
+
+  useEventListener(player, 'playingChange', ({ isPlaying }) => {
+    if (reloading.current) {
+      // Le premier démarrage après le remplacement marque la fin de la relance.
+      if (isPlaying) reloading.current = false;
+      return;
+    }
+    if (!isPlaying) {
+      // Une mise en mémoire tampon (`loading`) n'est pas une pause.
+      if (player.status !== 'loading') pausedSinceStart.current = true;
+      return;
+    }
+    notifyStarted();
+    setNowPlayingNotification(player, true);
+    // Au premier démarrage, jamais de relance.
+    if (!pausedSinceStart.current) return;
+    pausedSinceStart.current = false;
+    console.info('Direct : reprise après une pause, relance au direct');
+    void reloadLive();
   });
 
   // `useEvent` renvoie la dernière valeur de l'événement et relance le rendu
@@ -35,6 +113,9 @@ export function LivePlayer() {
     setStalled(false);
     if (newStatus === 'error') {
       console.info('Direct : erreur du lecteur', error?.message);
+      // Une relance en échec finit ici : voile d'erreur et « Réessayer ».
+      reloading.current = false;
+      setMuted(player, false);
     }
   });
 
@@ -50,9 +131,13 @@ export function LivePlayer() {
   }, [status, attempt]);
 
   // Aucun rechargement automatique après une erreur : on remplace la source.
+  // Le démarrage qui suit passe par le chemin normal (un seul `notifyStarted`).
   const retry = async () => {
     setStalled(false);
     setAttempt((n) => n + 1);
+    reloading.current = false;
+    pausedSinceStart.current = false;
+    setMuted(player, false);
     await player.replaceAsync(LIVE_SOURCE);
     player.play();
   };
